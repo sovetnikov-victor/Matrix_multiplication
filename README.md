@@ -1,10 +1,10 @@
 # Algorithm Description
 
-Algorithm handles all matrices as square matrix. During research I have found that square matrices are multiplied in shorter times. For example multiplying 1024x1024 by 1024x1024 matrix takes 4 times less duration than 1024x1024 by 1024x1023 matrix, so I have transformed the matrices to square matrices by equalizing their dimension and filling empty places with zeros according to block size.
+Алгоритм обрабатывает все матрицы как квадратные матрицы. В ходе исследований я обнаружил, что квадратные матрицы умножаются в короткие сроки. Например, умножение матрицы 1024x1024 на 1024x1024 занимает в 4 раза меньше времени, чем матрица 1024x1024 на 1024x1023, поэтому я преобразовал матрицы в квадратные матрицы, выровняв их размерность и заполнив пустые места нулями в соответствии с размером блока.
 
-In the kernel because of the shared memory usage and its size limitations I have found solution from web [1] named “tiling”. By dividing the matrices to square tiles algorithm founds the one part of the resulting element and then considering other tiles and their result it finds one element of the resulting matrix. While using tiling solution and shared memory, there are two important things: Coalesced memory access and bank conflict. In order to prevent from uncoalesced access tiles are taken from global memory to shared memory row by row by as big as block size. When reaching to shared memory matrices elements corresponds to different banks which can be seen from code, so bank conflict is prevented in this way.
+В ядре из-за использования общей памяти и ее ограничений по размерам я нашел решение из сети [1] под названием «tiling». Путем деления матриц на квадратные плитки алгоритм находит одну часть результирующего элемента, а затем рассматривает другие фрагменты и их результат, находит один элемент результирующей матрицы. При использовании решения для листов и разделяемой памяти, есть две важные вещи: объединенный доступ к памяти и конфликт банков. Чтобы предотвратить несвязанный доступ, плитки вывозятся из глобальной памяти построчно по размеру блока. При достижении элементов общей памяти матрицы соответствуют различным банкам, что видно из кода, поэтому таким образом предотвращается конфликт банков.
 
-Another important point using shared memory is synchronization of threads. `__syncthreads()`  is used in order to fill shared memory before calculation start. If calculation phase starts before filling the shared memory threads will reach to empty places.
+Другим важным моментом использования разделяемой памяти является синхронизация потоков. `__syncthreads ()` используется для заполнения общей памяти перед началом расчета. Если фаза расчета начинается до заполнения разделяемой памяти, потоки достигнут пустых мест.
 
 ## Compilation & Execution
 
@@ -22,7 +22,7 @@ Results are equal!
 
 ## Block Size
 
-While considering block size checking GPU board’s specs is important. It supports 32 banks while reaching to shared memory so I have used 16 and 32 as block sizes. Different sizes are also tried in order to compare performances. Grid dimension is directly computed according to matrix dimensions.
+При рассмотрении размера блока важно проверить характеристики платы GPU. Он поддерживает 32 банка при доступе к общей памяти, поэтому я использовал 16 и 32 в качестве размеров блоков. Различные размеры также пробуются для сравнения производительности. Размер сетки напрямую рассчитывается в соответствии с размерами матрицы.
 
 ## Test Results
 
@@ -38,26 +38,7 @@ Block Size of Tile | Matrix Dimension | GPU time in ms | CPU time in ms
 32x32 | 512x512 & 512x512     | 0.254       | 489.861
 32x32 | 1024x1024 & 1024x1024 | 1.987|4085.987
 
-
-## Discussion
-Memory is not a problem when global memory is considered because 1024x1024 matrix needs 4MB of space. However, shared memory size is limited and in order to provide concurrent execution of blocks in one SM shared memory must be divided wisely.
-
 ## Environment
         Nvidia GeForce GTX850M
         Intel® Core™ i7-4700HQ CPU
-        Cuda 10.0, V10.0.130
-
-## References
-[1]\
- <http://www.es.ele.tue.nl/~mwijtvliet/5KK73/?page=mmcuda&fbclid=IwAR0JgDDshTIpx-2Sv7goDK0TauD0Iz7DFeFtookp0loKFvV6jHcK8D7E7M8>
-
-[2]\
-<http://www.shodor.org/media/content/petascale/materials/UPModules/matrixMultiplication/moduleDocument.pdf>
-
-
-
-## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
-
+        Cuda 10.0
